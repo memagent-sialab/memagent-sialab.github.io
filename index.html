@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="description"
+        content="MemAgent: Reshaping Long-Context LLM with Multi-Conv RL based Memory Agent" />
+    <meta name="Long context, reasoning, large lanuge model, LLM"
+        content="MemAgent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MemAgent: Reshaping Long-Context LLM with Multi-Conv RL based Memory Agent</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/bulma.min.css" />
+    <link rel="stylesheet" href="./css/bulma-carousel.min.css" />
+    <link rel="stylesheet" href="./css/bulma-slider.min.css" />
+    <link rel="stylesheet" href="./css/fontawesome.all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" />
+    <link rel="stylesheet" href="./css/index.css" />
+    <link rel="stylesheet" href="./css/enhanced-styles.css" />
+    <link rel="stylesheet" href="./css/final-enhancements.css" />
+    <link rel="stylesheet" href="./css/navbar-fix.css" />
+    <link rel="stylesheet" href="./css/navbar-alignment-fix.css" />
+    <link rel="stylesheet" href="./css/overlap-fix.css" />
+    <link rel="stylesheet" href="./css/spacing-fix.css" />
+    <link rel="stylesheet" href="./css/author-affiliation-styles.css" />
+    <link rel="icon" href="./assets/doubao.png" type="image/png" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script defer src="./js/fontawesome.all.min.js"></script>
+    <script src="./js/bulma-carousel.min.js"></script>
+    <script src="./js/bulma-slider.min.js"></script>
+    <script src="./js/index.js"></script>
+    <script src="./js/enhanced-animations.js"></script>
+    <script src="./js/language-switcher.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      chtml: {
+        displayAlign: "center"  // ✅ 居中显示 block 公式
+      },
+      loader: {
+        load: ['[tex]/ams']  // 可选加载 AMSmath 宏包等
+      }
+    };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <style>
+        .left-logo {
+             margin-right: 1.0rem; /* 调整右侧间距，使得其他元素能够与其对齐 */
+            border-radius: 0; /* 移除圆角处理 */
+        }
+        .equation-centered {
+          text-align: center;
+          margin: 2rem 0;
+        }
+        .nowrap-math {
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .has-text-centered {
+            text-align: center !important;
+        }
+        .has-text-centered {
+            margin: 1.5rem 0;
+        }
+        /* 防止数学公式换行 */
+        .MathJax {
+            white-space: nowrap !important;
+        }
+        /* 确保居中的数学公式块 */
+        .math-center {
+            display: block;
+            text-align: center;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+        .boxed-title {
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="#">
+                    <img src="figs/seed_logo.png" alt="Seed logo" style="height: 1.5rem; max-height: unset;" class="left-logo">
+                    <img src="figs/gensi.jpg" alt="GenSI logo" style="height: 3.0rem; max-height: unset; margin-right: 0.5rem;">
+                    | MemAgent
+                    
+                </a>
+                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
+            <div class="navbar-menu">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="#introduction">
+                        <span lang="en">Introduction</span>
+                        <span lang="zh">引言</span>
+                    </a>
+                    <a class="navbar-item" href="#method">
+                        <span lang="en">Method</span>
+                        <span lang="zh">方法</span>
+                    </a>
+                    <a class="navbar-item" href="#experiments">
+                        <span lang="en">Experiments</span>
+                        <span lang="zh">实验</span>
+                    </a>
+                    <a class="navbar-item" href="#engineering">
+                        <span lang="en">Engineering</span>
+                        <span lang="zh">工程</span>
+                    </a>
+                    <a class="navbar-item" href="#citation">
+                        <span lang="en">Citation</span>
+                        <span lang="zh">引用</span>
+                    </a>
+                    <button id="language-toggle" class="navbar-item language-toggle">中文</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+<section class="hero"> 
+  <div class="hero-body">
+
+    <div class="container">
+        
+      <div class="has-text-centered">
+        <h1 class="publication-title">
+        <span>
+            <span lang="en"><em class="dnerf">MemAgent</em>: Reshaping Long-Context LLM with Multi-Conv RL based Memory Agent</span>
+            <span lang="zh"><em class="dnerf">MemAgent</em>：Reshaping Long-Context LLM with Multi-Conv RL based Memory Agent</span>
+        </span>
+        </h1>
+
+        <div class="publication-authors">
+          <span class="author-block"><span lang="en">Hongli Yu<sup>1,2,3</sup></span><span lang="zh">于鸿利<sup>1,2,3</sup></span></span>
+          <span class="author-block"><span lang="en">Tinghong Chen<sup>2</sup></span><span lang="zh">陈霆鸿<sup>2</sup></span></span>
+          <span class="author-block"><span lang="en">Jiangtao Feng<sup>2</sup></span><span lang="zh">封江涛<sup>2</sup></span></span>
+          <span class="author-block"><span lang="en">Jiangjie Chen<sup>1,3</sup></span><span lang="zh">陈江捷<sup>1,3</sup></span></span>
+          <span class="author-block"><span lang="en">Weinan Dai<sup>1,2,3</sup></span><span lang="zh">戴炜楠<sup>1,2,3</sup></span></span>
+          <span class="author-block"><span lang="en">Qiying Yu<sup>1,2,3</sup></span><span lang="zh">禹棋赢<sup>1,2,3</sup></span></span>
+          <span class="author-block"><span lang="en">Yaqin Zhang<sup>2,3</sup></span><span lang="zh">张亚勤<sup>2,3</sup></span></span>
+          <span class="author-block"><span lang="en">Weiying Ma<sup>2,3</sup></span><span lang="zh">马维英<sup>2,3</sup></span></span>
+          <span class="author-block"><span lang="en">Jingjing Liu<sup>2,3</sup></span><span lang="zh">刘菁菁<sup>2,3</sup></span></span>
+          <span class="author-block"><span lang="en">Mingxuan Wang<sup>1,3</sup></span><span lang="zh">王明轩<sup>1,3</sup></span></span>
+          <span class="author-block"><span lang="en">Hao Zhou<sup>2,3</sup></span><span lang="zh">周浩<sup>2,3</sup></span></span>
+        </div>
+
+        <div class="publication-affiliations">
+          <span class="affiliation-block">
+            <span lang="en"><sup>1</sup>ByteDance Seed</span>
+            <span lang="zh"><sup>1</sup>字节跳动 Seed</span>
+          </span><br>
+          <span class="affiliation-block">
+            <span lang="en"><sup>2</sup>Institute for AI Industry Research (AIR), Tsinghua University</span>
+            <span lang="zh"><sup>2</sup>清华大学智能产业研究院（AIR）</span>
+          </span><br>
+          <span class="affiliation-block">
+            <span lang="en"><sup>3</sup>SIA-Lab of Tsinghua AIR and ByteDance Seed</span>
+            <span lang="zh"><sup>3</sup>清华大学 AIR 与字节跳动 Seed 联合实验室 SIA-Lab</span>
+          </span>
+                    </div>
+                    <div class="publication-links">
+                        <span class="link-block">
+                          <a href="https://github.com/BytedTsinghua-SIA/MemAgent/blob/main/paper/paper.pdf" class="external-link button is-dark">
+                              <span class="icon">
+                                  <i class="fas fa-file-pdf"></i>
+                              </span>
+                              <span lang="en">Paper</span>
+                              <span lang="zh">论文</span>
+                          </a>
+                        </span>
+                        <span class="link-block">
+                            <a href="https://github.com/BytedTsinghua-SIA/MemAgent" class="external-link button is-dark">
+                                <span class="icon">
+                                    <i class="fas fa-database"></i>
+                                </span>
+                                <span lang="en">Code</span>
+                                <span lang="zh">代码</span>
+                            </a>
+                        </span>
+                        <span class="link-block">
+                            <a href="https://huggingface.co/datasets/BytedTsinghua-SIA/hotpotqa" class="external-link button is-dark">
+                                <span class="icon">
+                                    🤗
+                                </span>
+                                <span lang="en">Dataset</span>
+                                <span lang="zh">数据</span>
+                            </a>
+                        </span>
+                        <span class="link-block">
+                            <a href="https://huggingface.co/BytedTsinghua-SIA/RL-MemoryAgent-14B" class="external-link button is-dark">
+                                <span class="icon">
+                                    🤗
+                                </span>
+                                <span lang="en">Model</span>
+                                <span lang="zh">模型</span>
+                            </a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<section class="section" id="introduction">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-10">
+                <h2 class="title is-3">
+                    <span lang="en">Introduction</span>
+                    <span lang="zh">引言</span>
+                </h2>
+                <div class="content">
+
+                    <p lang="en">
+                        We propose a novel long-context processing framework — <strong>MemAgent</strong>, which directly optimizes long-context tasks through end-to-end Reinforcement Learning without altering the underlying model architecture. <strong>MemAgent</strong> has demonstrated superb long-context capabilities, being able to extrapolate from an 8K context trained on 32K text to a 3.5M QA task with performance loss < 5% and achieves 95%+ accuracy in 512K RULER test.
+                    </p>
+                    <p lang="zh">
+                        我们推出了<strong>MemAgent</strong>，这是一个全新的长文本处理框架，能够通过端到端的强化学习直接优化长文本任务性能，而无需更改底层模型架构。<strong>MemAgent</strong> 具有出色的长文本处理能力，能够从 8K 上下文长度和32K训练数据长度外推至 3.5M 问答任务，性能损失 < 5%，并在 512K 的 RULER 测试集上取得 95%+ 准确率。
+                    </p>
+                    <p lang="en">
+                        <strong>MemAgent</strong> achieves three core breakthroughs:
+                    </p>
+                    <p lang="zh">
+                        <strong>MemAgent</strong> 实现了三大核心突破：
+                    </p>
+                    <div
+                        style="background-color: #f8fafc; border-radius: 12px; border-left: 6px solid #3a76ed; padding: 1.2rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                <div style="display: flex; align-items: flex-start; gap: 0.8rem;"> 
+                                    <div
+                                        style="background-color: #3a76ed; color: white; padding: 0.4rem; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem;">
+                                        1
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0; line-height: 1.4;" lang="en"><strong>Novel memory mechanism: </strong>The agent reads text in segments and efficiently updates memory through an overwriting strategy. This design enables the model to process arbitrarily long inputs within a fixed context window, fundamentally overcoming the window length limitations of traditional Transformer architectures.</p>
+                                        <p style="margin: 0; line-height: 1.4;" lang="zh"><strong>新型记忆机制：</strong>
+                                            Agent 以分段方式读取文本，并借助覆写策略高效更新记忆。该设计使得模型能够在固定上下文窗口内处理任意长度的输入，从根本上突破了传统 Transformer 架构的窗口长度限制。</p>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: flex-start; gap: 0.8rem;">
+                                    <div
+                                        style="background-color: #3a76ed; color: white; padding: 0.4rem; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem;">
+                                        2
+                                    </div>
+                                    <div>
+                                    <p style="margin: 0; line-height: 1.4;" lang="en"><strong>O(n) complexity:</strong> By decoupling computation from text length, the complexity of processing long texts is transformed from quadratic growth to linear growth.</p>
+                                    <p style="margin: 0; line-height: 1.4;" lang="zh"><strong>O(n) 线性复杂度：</strong>
+                                        将计算与文本长度解耦，使得处理长文本的复杂度由原本的二次方增长转变为线性增长。</p>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: flex-start; gap: 0.8rem;">
+                                    <div
+                                        style="background-color: #3a76ed; color: white; padding: 0.4rem; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem;">
+                                        3
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0; line-height: 1.4;" lang="en"><strong>RL-driven extrapolation:</strong> We enhance the DAPO algorithm to support multi-turn training over context-independent conversations. Based on this, the trained model exhibits unprecedented extrapolation performance.</p>
+                                        <p style="margin: 0; line-height: 1.4;" lang="zh"><strong>强化学习驱动的外推能力:</strong>
+                                            我们改进了 DAPO 算法，使其支持独立上下文的多轮生成训练。 基于此训练出的模型表现出了可观的外推性能。
+                                        </p>
+                                    </div>
+                                </div>                                
+                            </div>
+                    </div>
+
+                    <strong><em style="color: #3a76ed"><p lang="en">
+                        Through a simple yet effective design, we demonstrate the first truly trainable memory mechanism powered by reinforcement learning, showcasing the vast potential of using RL to optimize agent workflows.
+                    </p></em></strong>
+                    <strong><em style="color: #3a76ed"><p lang="zh">
+                        我们以一种简洁而高效的方式，首次实现了真正意义上的、由强化学习赋予的可训练记忆能力，充分展现了强化学习在优化工作流方面的巨大潜力。
+                    </p></em></strong>
+                    <figure class="image" style="max-width: 1000px; margin: 2rem auto;">
+                      <img src="figs/main_result_00.png" alt="Main Result Fig">
+                        <figcaption>
+                            <span>Accuracy scores of RULER-HotpotQA</span>
+                        </figcaption>
+                    </figure>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="section" id="method">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-10">
+                <h2 class="title is-3">
+                    <span lang="en">Method</span>
+                    <span lang="zh">方法介绍</span>
+                </h2>
+                <div class="content">
+                    
+                    <h4 lang="zh" class="boxed-title"><strong>Memory Agent框架</strong></h4>
+                    <h4 lang="en" class="boxed-title"><strong> </strong></h4>
+                    <p lang="en">
+                        Inspired by human behavioral patterns when processing long texts, we propose <strong>MemAgent</strong>, a novel approach for long-context processing that requires no modification to model architecture:
+                        <br><strong style="color:#3273dc;">| Equipping LLMs with dynamically updating "Memory Modules"</strong>.
+                    </p>
+                    <p lang="zh">
+                        受人类处理长文本时的行为模式启发，我们提出了一种无需修改模型架构的长文处理新方案——<strong>MemAgent</strong>：
+                        <br><strong style="color:#3273dc;">| 给LLM装上动态更新的"记忆模块"</strong>。
+                    </p>
+                    
+                    <figure class="image" style="max-width: 800px; margin: 2rem auto;">
+                        <img src="figs/method_00.png" alt="MemAgent Architecture Overview">
+                            <figcaption>
+                                <span>MemAgent Architecture Overview</span>
+                            </figcaption>
+                    </figure>
+                    
+                    <p lang="en">
+                        <strong>MemAgent</strong> introduces a fixed-length auxiliary memory panel that enables the model to process long texts in a segmented manner, actively updating the memory state after each segment to achieve a novel "local processing + global fusion" workflow. This memory module continuously updates dynamically during inference and, after all segments are processed, assists in generating the final output by aggregating critical information stored in memory.
+                    </p>
+                    <p lang="zh">
+                        <strong>MemAgent</strong>引入了一个固定长度的辅助记忆面板，允许模型在处理长文本时以分段的方式读取输入，并在每一段之后主动更新记忆状态，从而实现"局部处理 + 全局融合"的新型工作流。该记忆模块在推理过程中不断动态更新，并在所有段落处理完毕后，通过聚合记忆中的关键信息协助生成最终输出。
+                    </p>
+
+
+
+                    <h4 lang="zh" class="boxed-title"><strong>多轮对话强化学习训练 MemAgent </strong></h4>
+                    <h4 lang="en" class="boxed-title"><strong>Training MemAgent with Multi-conv RL </strong></h4>
+                    <p lang="en">
+                        We employ Reinforcement Learning from Verifiable Rewards (RLVR), which currently demonstrates exceptional performance in the reasoning domain, to train <strong>MemAgent</strong>, rather than simply performing fine-tuning or instruction engineering. To this end, we extend the existing DAPO algorithm to further support end-to-end optimization of Agent Workflows with multi-turn context-independent conversations.
+                    </p>
+                    <p lang="zh">
+                        我们使用目前在推理领域表现出卓越性能的基于可验证结果的强化学习（RLVR）来训练<strong>MemAgent</strong>，而非简单的进行微调或指令工程。为此，我们扩展了现有的DAPO算法，使其进一步支持了具有多轮独立对话的Agent Workflow的端到端优化。
+                    </p>
+
+                    <div class="columns is-vcentered">
+                        <div class="column">
+                            <figure class="image">
+                                <img src="figs/algo_00.png" alt="Comparison between vanilla GRPO and Multi-Conv DAPO">
+                                <figcaption>
+                                    <span>Comparison between vanilla GRPO and Multi-Conv DAPO</span>
+                                  </figcaption>
+                            </figure>
+                        </div>
+                        <div class="column">
+                            <figure class="image">
+                                <img src="figs/template.png" alt="Template of MemAgent for context processing (top part) and final answer generation (bottom)" style="width: 120%;">
+                                <figcaption>
+                                    <span>Template of MemAgent</span>
+                                </figcaption>
+                            </figure>
+                        </div>
+                    </div>
+
+                    <p lang="en"><strong>Multi-Conv Training Mechanism:</strong> For each input sample, the model generates multiple responses, where each response cannot be obtained by simply concatenating previous generation trajectories but has independent inputs, differing from the approach in tool calling that uses multi-turn concatenated trajectories as input.</p>
+                    <p lang="zh"><strong>多轮对话训练机制：</strong>对于每个输入样本，模型生成多次回答，每次回答的输入不能通过简单的拼接此前的生成轨迹获得，而是具有独立的输入，区别于工具调用中使用多轮拼接轨迹作为输入的方式。</p>
+                    <p lang="en"><strong>Reward Computation</strong> The final answer is extracted based from the last turn of conversation. . The advantage is computed through rule-based outcome reward and group normalization and then be allocated to all associated conversations.</p>
+                    <p lang="zh"><strong>奖励计算：</strong>从最后一轮回答中提取最终答案，使用基于规则的结果奖励并通过组归一化计算优势，将其分配到所有关联对话。</p>
+
+                    <p lang="en"><strong>Policy Optimization:</strong> Each conversation serves as an optimization target, with the objective function calculated based on its advantage and token-level averaging performed.</p>
+                    <p lang="zh"><strong>优化策略</strong>以每轮对话为优化目标，根据其优势计算DAPO风格的token-level平均化loss。</p>
+                    <div class="math-center">
+                      $$
+                      \begin{aligned}
+                      \mathcal{J}_{\text{DAPO}}(\theta) =\quad &\mathbb{E}_{(q,a)\sim \mathcal{D}, \{o_{i,j}\}_{i=1}^G\sim \pi_{\theta_\text{old}}(\cdot\mid q,~o_{i,j-1})} \\
+                      &\Bigg[\frac{1}{\sum_{i=1}^{G}\sum_{j=1}^{n_i}|o_{i,j}|}\sum_{i=1}^{G}\sum_{j=1}^{n_i}\sum_{t=1}^{|o_{i,j}|}
+                      \Big(\mathcal{C}_{i,j,t} - \beta D_{\text{KL}}(\pi_{\theta} || \pi_{\text{ref}} )\Big) \Bigg] \\
+                      \text{where } \mathcal{C}_{i,j,t} = &\min\Big(r_{i,j,t}(\theta) \hat{A}_{i,j,t},  
+                      \ \text{clip} \Big( r_{i,j,t}(\theta), 1 - {\varepsilon_{low}}, 1 + {\varepsilon_{high}} \Big) \hat{A}_{i,j,t}\Big)
+                      \end{aligned}
+                      $$
+                    </div>
+
+                    <h4 lang="zh" class="boxed-title"><strong>重新建模语言模型的生成过程 </strong></h4>
+                    <h4 lang="en" class="boxed-title"><strong>Re-modeling the Language Model Generation Process</strong></h4>
+                    <p lang="en" class="boxed-title"><strong>Traditional Text Modeling:</strong></p>
+                    <p lang="en">
+                        Traditional autoregressive language models model token sequences of length N through the following approach:
+                    </p>
+                    <h5 lang="zh" class="boxed-title"><strong>传统文本建模：</strong></h5>
+                    <p lang="zh">
+                        传统的自回归语言模型通过以下方式建模长度为N的token序列：
+                    </p>
+                    <div class="math-center">
+                        $p(\mathbf{x}_{1:N}) = p(x_1) \prod_{n=2}^{N} p(x_n \mid \mathbf{x}_{1:n-1})$
+                    </div>
+                    <p lang="en">
+                        This method requires attention computation over all previously generated tokens, leading to a cost of <span class="nowrap-math">$O(N^2)$</span>.
+                    </p>
+                    <p lang="zh">
+                        这种方法需要对所有先前生成的token计算注意力，导致计算成本随序列长度呈二次方增长。
+                    </p>
+
+                    <h5 lang="en" class="boxed-title"><strong>Rethinking MemAgent from LM Perspectives</strong></h5>
+                    <p lang="en">
+                      To get a deeper sense of the <strong>MemAgent</strong> design, we propose to re-think language-model factorization in the following fashion. 
+                    </p>
+                    <h5 lang="zh" class="boxed-title"><strong>从语言模型的角度重新理解 MemAgent</strong></h5>
+                    <p lang="zh">
+                        为了进一步地理解 <strong>MemAgent</strong>的设计，我们考虑下列对语言模型的生成过程的新建模方式。
+                    </p>
+                    <!--  -->
+                    <p lang="en" >Specifically, the input sequence is segmented into K contiguous chunks <span class="nowrap-math">\((c^1, c^2, \ldots, c^K)\)</span>, with each chunk containing at most <span class="nowrap-math">\(C\)</span> tokens.</p>
+                    <p lang="en" >Let <span class="nowrap-math"> \(m^{1:K-1}\)</span> denoteds the latent memory variables and initial state <span class="nowrap-math">\(m^0 = \emptyset\)</span>, the autoregressive factorization is reformulated as a series of chunk processing and reading and writing to the memory:</p>
+                    
+                    <!--  -->
+                    <p lang="zh" >具体来说，我们将输入序列分割为K个连续块 <span class="nowrap-math">\((c^1, c^2, \ldots, c^K)\)</span>，每块最多包含 <span class="nowrap-math">\(C\)</span> 个token。</p>
+                    <p lang="zh" >引入表示记忆的隐变量<span class="nowrap-math">\(m^{1:K-1}\)</span>并给定初始状态<span class="nowrap-math">\(m^0 = \emptyset\)</span>后，自回归过程可重新表述为一系列对输入块的处理并读写memory的过程：</p>
+
+                    <div class="math-center">
+                          $p(\mathbf{x}_{1:N}) = \sum_{\mathbf{m}^{1:K-1}} \prod_{k=1}^{K}
+                          \underbrace{p(\mathbf{c}^k \mid \mathbf{m}^{k-1})}_{\text{read}} \cdot
+                          \underbrace{p(\mathbf{m}^k \mid \mathbf{c}^k, \mathbf{m}^{k-1})}_{\text{write}}$
+                    </div>
+
+                    <p lang="en" >The new modeling bounds the context window of each conversation within a fixed size, yielding a <span class="nowrap-math">$O(N)$</span> computational cost.</p>
+                    <!--  -->
+                    <p lang="zh" >新的建模方式将每次对话的上下文窗口大小限制在常数范围内，最终的计算复杂度为 <span class="nowrap-math">$O(N)$</span>。</p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="experiments">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-10">
+        <h2 class="title is-3">
+          <span lang="en">Experiments</span>
+          <span lang="zh">实验分析</span>
+        </h2>
+        <div class="content">
+
+          <h4 lang="en"><strong>Main Results</strong></h4>
+          <h4 lang="zh"><strong>主实验结果</strong></h4>
+
+          <p lang="en">
+            <strong>Baseline Models:</strong> Experimental results demonstrate that existing models exhibit significant performance degradation when confronted with ultra-long contexts.
+            <ul lang="en">
+              <li><strong>DS-distill series:</strong> Performance within context rapidly decays to extremely low levels as length increases, becoming essentially ineffective beyond the context window due to information loss.</li>
+              <li><strong>QwenLong-L1:</strong> With post-training length of 60K, performance decline within this range is approximately 10%. While the degradation from 64K to 112K exceeds 28%, despite remaining within the context window length.</li>
+              <li><strong>Qwen2.5-Instruct-1M series:</strong> Performance decline within context is gradual, but performance drops to zero at 896K testing, still within the 1M context length range.</li>
+            </ul>
+          </p>
+
+          <p lang="zh">
+            <strong>基线模型：</strong> 实验结果显示，现有模型在面对超长序列时均出现显著的性能退化：
+            <ul lang="zh">
+              <li><strong>DS-distill系列：</strong>Context window内性能随长度迅速衰减到极低水平，超出context window因丢失信息基本失效。</li>
+              <li><strong>QwenLong-L1：</strong>后训练长度为60K，在此之内的性能下降约为10%。从64K到112K的下降则超过28%，尽管此时尚在context window长度之内。</li>
+              <li><strong>Qwen2.5-Instruct-1M系列：</strong>context内性能下降平缓，但在尚在1M上下文长度范围内的896K测试上便已降至0。</li>
+            </ul>
+          </p>
+
+          <p lang="en">
+            <strong>RL-MemAgent:</strong> In contrast, RL-MemAgent demonstrates exceptional stability in ultra-long context processing:
+            <ul lang="en">
+              <li><strong>RL-MemAgent-14B:</strong> Performance degradation <5.5% on 3.5M token tasks, achieving truly lossless extrapolation.</li>
+              <li><strong>RL-MemAgent-7B:</strong> Only 11% performance decline in the longest contexts, with overall performance far exceeding existing long-context models.</li>
+            </ul>
+          </p>
+
+          <p lang="zh">
+            <strong>RL-MemAgent：</strong> 相比之下，RL-MemAgent在超长文本处理中展现了优异的稳定性：
+            <ul lang="zh">
+              <li><strong>RL-MemAgent-14B：</strong>在3.5M token任务上性能下降<5.5%，实现了真正意义上的无损外推。</li>
+              <li><strong>RL-MemAgent-7B：</strong>在最长文本上仅出现11%的性能下降，整体表现远超现有长文本模型。</li>
+            </ul>
+          </p>
+
+          <figure class="image" style="max-width: 900px; margin: 2rem auto;">
+            <img src="figs/main_result.png" alt="Main experimental results">
+            <figcaption>
+              <span>Main experimental results</span>
+            </figcaption>
+          </figure>
+
+
+          <h4 lang="en"><strong>Ablation Study</strong></h4>
+          <h4 lang="zh"><strong>消融实验</strong></h4>
+
+          <p lang="en">
+                To validate the necessity of using reinforcement learning for Memory Agent training, we conduct comprehensive ablation experiments.
+                <ul lang="en">
+                  <li><strong>Base Model:</strong> The original model exhibits severe performance degradation as context length increases, particularly after 112K where inputs are truncated due to context window limitations, making effective extrapolation nearly impossible.</li>
+                  <li><strong>MemAgent (w/o RL):</strong> Compared to the base model, it demonstrates better performance and maintains reasonable capability on tasks exceeding the context length, but still experiences overall performance decline as input length increases.</li>
+                  <li><strong>RL-MemAgent:</strong>The RL-trained <strong>MemAgent</strong> maintains near-lossless extrapolation capability across all context lengths.</li>
+                </ul>
+          </p>
+
+          <p lang="zh">
+                我们进行了系统性的消融实验，验证使用强化学习对MemAgent进行训练的必要性。
+                <ul lang="zh">
+                  <li><strong>基础模型：</strong> 原始模型随着上下文长度增加表现出严重的性能下降，特别是在112K之后，由于上下文窗口限制导致输入被截断，使得有效外推几乎不可能实现。</li>
+                  <li><strong>MemAgent（w/o RL）：</strong> 相较于基础模型表现出更好的性能，在超出上下文长度的任务中保持一定水平的能力，但随着输入长度增加仍然出现整体性能下降。</li>
+                  <li><strong>RL-MemAgent：</strong> 经过强化学习训练的<strong>MemAgent</strong>在所有上下文长度中保持近乎无损的外推能力。</li>
+                </ul>
+          </p>
+
+          <figure class="image" style="max-width: 800px; margin: 2rem auto;">
+            <img src="figs/ablation_00.png" alt="Ablation study on RULER-HotpotQA">
+                <figcaption>
+                    <span>Ablation study on RULER-HotpotQA</span>
+                </figcaption>
+          </figure>
+
+          <h4 lang="en"><strong>Other OOD Task in RULER Benchmark</strong></h4>
+          <h4 lang="zh"><strong>RULER基准测试中的其他OOD任务</strong></h4>
+
+          <p lang="en">
+            <strong>RULER</strong> is the current standard test set for long-text extrapolation capability research, with the core advantage of controllable length generation tasks. We utilize synthetic QA data based on HotpotQA for training.
+          </p>
+
+          <p lang="zh">
+            <strong>RULER基准测试</strong> 是当前长文本外推能力研究的标准测试集，其核心优势是可控长度生成任务。训练中，我们使用了从HotpotQA合成的QA数据。
+          </p>
+
+          <div class="box" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 1.5rem;">
+            <div class="columns is-multiline is-variable is-4">
+              <div class="column is-6">
+                <div class="box has-background-white-ter">
+                  <strong lang="en">Needle-in-a-Haystack(NIAH)</strong>
+                  <strong lang="zh">大海捞针（NIAH）</strong>
+                  <p lang="en">Locating key needles in ultra-long texts, including 8 types of interference variants.</p>
+                  <p lang="zh">在超长文本中定位关键needle，包含8类干扰变体。</p>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="box has-background-white-ter">
+                  <strong lang="en">Variable Tracking(VT)</strong>
+                  <strong lang="zh">变量追踪（VT）</strong>
+                  <p lang="en">Simulating program analysis scenarios, tracking variable references and assignment relationships.</p>
+                  <p lang="zh">模拟程序分析场景，追踪变量引用和赋值关系。</p>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="box has-background-white-ter">
+                  <strong lang="en">Aggregation(Agg)</strong>
+                  <strong lang="zh">聚合任务（Agg）</strong>
+                  <p lang="en">Aggregating scattered information to evaluate the model's ability to grasp global features.</p>
+                  <p lang="zh">汇总分散信息，评估模型对全局特征的掌握能力。</p>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="box has-background-white-ter">
+                  <strong lang="en">Question Answering (QA)</strong>
+                  <strong lang="zh">问答任务（QA）</strong>
+                  <p lang="en">Conducting multi-hop complex reasoning to test the model's contextual understanding and QA capabilities.</p>
+                  <p lang="zh">进行多跳复杂推理，测试模型上下文理解与问答能力。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p lang="en">
+                <strong>OOD Experiments:</strong> We test out model in 10 untrained tasks and QA task synthesized from a new dataset, SQuAD. We use heatmaps to visualize the performance of different models across different length ranges and task types. ur model achieves a SOTA in this two OOD tests and the 14B model achieves 95%+ average score over 10 OOD RULER tests in 512K context length. 
+          </p>
+
+          <p lang="zh">
+                <strong>OOD实验：</strong> 我们在10个未训练任务和使用新数据集（SQuAD）合成的问答任务上测试模型性能，使用热力图可视化不同模型在不同长度区间和任务类型下的性能表现。我们的模型在这两个OOD测试中均取得SOTA表现，其中14B模型在512K上下文长度下的10个OOD RULER测试中取得95%+的平均分数。
+          </p>
+
+          <div class="columns is-multiline">
+            <div class="column is-6" width="60%">
+              <figure class="image" ><img src="figs/avg_00.png" alt="AVG">
+                  <figcaption>
+                    <span>RULER average across 10 tasks</span>
+                  </figcaption>
+              </figure>
+                
+            </div>
+            <div class="column is-6"  width="40%">
+              <figure class="image"><img src="figs/qa_1_00.png" alt="QA_1">
+                  <figcaption>
+                    <span>RULER-QA task from SQuAD</span>
+                  </figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="conclusion">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-10">
+        <h2 class="title is-3">
+          <span lang="en">Conclusion</span>
+          <span lang="zh">总结</span>
+        </h2>
+        <div class="content">
+            <p lang="zh">
+                本研究提出了一种全新的长文本处理框架 <strong>MemAgent</strong>，在以下三个关键维度实现了重要突破：
+            </p>
+            <p lang="en">
+                In this work, we propose a novel framework for long-context processing, with contributions spanning three key dimensions:
+            </p>
+                      <div
+                        style="background-color: #f8fafc; border-radius: 12px; border-left: 6px solid #3a76ed; padding: 1.2rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                <div style="display: flex; align-items: flex-start; gap: 0.8rem;"> 
+                                    <div
+                                        style="background-color: #3a76ed; color: white; padding: 0.4rem; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem;">
+                                        1
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0; line-height: 1.4;" lang="en"><strong>Architectural Innovation:</strong> We introduce an innovative mechanism that enables large language models to process arbitrarily long input sequences within a limited context window and with <strong>linear-time complexity</strong>, fundamentally addressing the computational bottlenecks faced by traditional long-context methods.</p>
+
+                                        <p style="margin: 0; line-height: 1.4;" lang="zh"><strong>技术架构突破：</strong>我们提出了一种创新的机制，使大语言模型能够在有限的上下文窗口内以<strong>线性时间复杂度</strong>处理任意长度的输入文本，从根本上解决了传统长文本方法面临的计算瓶颈问题。</p>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: flex-start; gap: 0.8rem;">
+                                    <div
+                                        style="background-color: #3a76ed; color: white; padding: 0.4rem; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem;">
+                                        2
+                                    </div>
+                                    <div>
+                                    <p style="margin: 0; line-height: 1.4;" lang="en"><strong>Agent Training Methodology:</strong> We design a complete agent workflow to implement this mechanism, and develop an end-to-end training framework based on <strong>Multi-conv RL</strong>, enabling the agent to learn how to store and retrieve relevant information effectively.</p>
+
+                                    <p style="margin: 0; line-height: 1.4;" lang="zh"><strong>智能体训练方法：</strong>
+                                        我们设计了一套完整的智能体工作流来实现上述机制，并基于<strong>多轮对话强化学习</strong>为该智能体设计了端到端的训练框架。</p>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: flex-start; gap: 0.8rem;">
+                                    <div
+                                        style="background-color: #3a76ed; color: white; padding: 0.4rem; border-radius: 50%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem;">
+                                        3
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0; line-height: 1.4;" lang="en"><strong>Extrapolation Performance:</strong> Through extensive empirical evaluation, we demonstrate that our Multi-conv RL method allows models to extrapolate far beyond their training context length with almost <strong>lossless performance</strong> during testing, substantially expanding the capability frontier of current long-context LLM systems.</p>
+
+                                        <p style="margin: 0; line-height: 1.4;" lang="zh"><strong>性能外推验证：</strong>
+                                            通过大量实验验证，我们证明了基于强化学习训练的方法能够让模型成功<strong>无损外推</strong>到远超训练长度的文档上，大幅扩展了当前长文本大语言模型系统的处理边界。</p>
+                                    </div>
+                                </div>                                
+                            </div>
+                    </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="engineering">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-10">
+        <h2 class="title is-3">
+          <span lang="en">Engineering Design</span>
+          <span lang="zh">工程设计</span>
+        </h2>
+
+        <div class="content">
+          <p lang="zh">
+            我们基于verl实现了基础的Multi-Conv DAPO训练代码，它定义了Multi-Conv工作流、数据集、配置项的统一接口，可方便地接入新的实现。
+          </p>
+          <p lang="en">
+            We implement a basic Multi-Conv DAPO training code based on verl, which defines a unified interface for Multi-Conv workflow, dataset, and configuration items.
+          </p>
+        </div>
+
+        <div class="content">
+          <p lang="zh">
+            我们进一步实现了一个纯异步的训练框架，使用统一接口做到了<strong>“Agent as a function”</strong>，仅需定义一个函数，即可实现任意agent workflow。
+          </p>
+          <ul lang="zh">
+            <li><strong>纯异步流水线：</strong> GPU/CPU资源解耦，<code>AsyncLLMEngine</code> 负责多节点推理，<code>Ray Worker</code>管理常驻CPU任务池，通过协程完成资源调度。</li>
+            <li><strong>统一API接口：</strong> 使用 OpenAI API 风格的接口调用LLM，支持 <strong>多轮工具调用、多轮独立对话</strong>，消除传统的大量冗余代码地狱。</li>
+          </ul>
+
+          <p lang="en">
+              We further implement a fully asynchronous training framework that achieves <strong>"Agent as a Function"</strong> through a unified interface, requiring only the definition of a single function to implement arbitrary agent workflows.
+          </p>
+          <ul lang="en">
+            <li><strong>Fully Asynchronous Pipeline:</strong> GPU and CPU resources are decoupled. <code>AsyncLLMEngine</code> handles multi-node inference while <br/><code>Ray Worker</code> manages a persistent process pool, and task scheduling is completed via <code>async</code> coroutines.</li>
+            <li><strong>Unified API Interface:</strong> Unified API Interface with OpenAI-style API, supporting <strong>multi-turn tool use, multi-agent parallelism, and multi-task training</strong>, eliminating traditional state machine boilerplate.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+    <!-- <section class="section" id="citation">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-10">
+                    <h2 class="title is-3">
+                        <span lang="en">📝 Citation</span>
+                        <span lang="zh">📝 引用</span>
+                    </h2>
+                    <div class="content">
+                        <p lang="en">If you find this work useful, please cite our paper:</p>
+                        <p lang="zh">如果您发现这项工作有用，请引用我们的论文：</p>
+                        <pre><code class="latex">
+@article{,
+    title={MemAgent: Reshaping Long-Context LLM with Mult-Conv RL based Memory Agent},
+    author={},
+    journal={},
+    year={2025}
+}
+                        </code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <footer class="footer">
+        <div class="container">
+            <div class="has-text-centered">
+                <p>
+                    <span lang="en">© 2025 <a href="https://seed.bytedance.com">ByteDance Seed</a>. Modified from <a href="https://github.com/seed-enigmata/seed-enigmata.github.io">R2E-Gym</a>.</span>
+                    <span lang="zh">© 2025 <a href="https://seed.bytedance.com">字节跳动Seed</a>. 修改自 <a href="https://github.com/seed-enigmata/seed-enigmata.github.io">R2E-Gym</a>.</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+
+</body>
+
+
+</html>
