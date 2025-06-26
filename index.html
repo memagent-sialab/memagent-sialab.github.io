@@ -92,7 +92,7 @@
             <div class="navbar-brand">
                 <a class="navbar-item" href="#">
                     <img src="figs/seed_logo.png" alt="Seed logo" style="height: 1.5rem; max-height: unset;" class="left-logo">
-                    <img src="figs/gensi.jpg" alt="GenSI logo" style="height: 3.0rem; max-height: unset; margin-right: 0.5rem;">
+                    <img src="figs/gensi.jpg" alt="GenSI logo" style="height: 2.5rem; max-height: unset; margin-right: 0.5rem;">
                     | MemAgent
                     
                 </a>
@@ -365,11 +365,11 @@
 
                     <p lang="en"><strong>Multi-Conv Training Mechanism:</strong> For each input sample, the model generates multiple responses, where each response cannot be obtained by simply concatenating previous generation trajectories but has independent inputs, differing from the approach in tool calling that uses multi-turn concatenated trajectories as input.</p>
                     <p lang="zh"><strong>多轮对话训练机制：</strong>对于每个输入样本，模型生成多次回答，每次回答的输入不能通过简单的拼接此前的生成轨迹获得，而是具有独立的输入，区别于工具调用中使用多轮拼接轨迹作为输入的方式。</p>
-                    <p lang="en"><strong>Reward Computation</strong> The final answer is extracted based from the last turn of conversation. . The advantage is computed through rule-based outcome reward and group normalization and then be allocated to all associated conversations.</p>
+                    <p lang="en"><strong>Reward Computation：</strong> The final answer is extracted based from the last turn of conversation.  The advantage is computed through rule-based outcome reward and group normalization and then be allocated to all associated conversations.</p>
                     <p lang="zh"><strong>奖励计算：</strong>从最后一轮回答中提取最终答案，使用基于规则的结果奖励并通过组归一化计算优势，将其分配到所有关联对话。</p>
 
-                    <p lang="en"><strong>Policy Optimization:</strong> Each conversation serves as an optimization target, with the objective function calculated based on its advantage and token-level averaging performed.</p>
-                    <p lang="zh"><strong>优化策略</strong>以每轮对话为优化目标，根据其优势计算DAPO风格的token-level平均化loss。</p>
+                    <p lang="en"><strong>Policy Optimization:</strong> Each conversation serves as an optimization target, with DAPO-style token-level averaged loss calculated based on its advantage.</p>
+                    <p lang="zh"><strong>优化策略：</strong>以每轮对话为优化目标，根据其优势计算DAPO风格的token-level平均损失。</p>
                     <div class="math-center">
                       $$
                       \begin{aligned}
@@ -566,7 +566,7 @@
           </div>
 
           <p lang="en">
-                <strong>OOD Experiments:</strong> We test out model in 10 untrained tasks and QA task synthesized from a new dataset, SQuAD. We use heatmaps to visualize the performance of different models across different length ranges and task types. ur model achieves a SOTA in this two OOD tests and the 14B model achieves 95%+ average score over 10 OOD RULER tests in 512K context length. 
+                <strong>OOD Experiments:</strong> We test out model in 10 untrained tasks and QA task synthesized from a new dataset, SQuAD. We use heatmaps to visualize the performance of different models across different length ranges and task types. Our model achieves a SOTA in this two OOD tests and the 14B model achieves 95%+ average score over 10 OOD RULER tests in 512K context length. 
           </p>
 
           <p lang="zh">
